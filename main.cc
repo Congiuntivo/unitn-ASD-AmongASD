@@ -78,13 +78,10 @@ int main()
 
 void printCorridoio(Corridoio c)
 {
-    cout << c.U << " --> " << c.V << ", costo = [" << c.Tmin << ", " << c.Tmax << "], " << c.ventola << endl;
-    /*
     if(c.ventola){
         cout << c.U << " --> " << c.V << ", costo = [" << c.Tmin << ", " << c.Tmax << "] " << endl;
     }
     else{
         cout << c.U << " --> " << c.V << ", costo = " << c.Tmin << endl;
     }
-    */
 }
