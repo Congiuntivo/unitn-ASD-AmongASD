@@ -5,14 +5,20 @@ using namespace std;
 
 
 struct Corridoio{
-    int U;
-    int V;
+    int destinazione;
     int Tmin;
-    int Tmax;
-    bool ventola;
+    int Tmax = -1;
+    bool ventola = false;
 };
 
-void printCorridoio(Corridoio c);
+struct Nodo{
+    vector<Corridoio> raggiungibili;
+    int distanza = -1;
+};
+
+void printNodi(vector<Nodo> nodi);
+void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K);
+
 
 int main()
 {
@@ -29,27 +35,15 @@ int main()
     stream >> I >> S >> F;
 
 
-
-    vector<Corridoio> corridoi(M + K);
-
-    //read corridoi semplici
-    for (size_t i = 0; i < M; i++)
-    {
-        int U, V, Tmin;
-        stream >> U >> V >> Tmin;
-        corridoi[i] = Corridoio{U, V, Tmin, -1, false};
-    }
-
-    //read remaining corridoi con ventola
-    for (size_t i = M; i < K + M; i++)
-    {
-        int U, V, Tmin, Tmax;
-        stream >> U >> V >> Tmin >> Tmax;
-        corridoi[i] = Corridoio{U, V, Tmin, Tmax, true};
-    }
+    vector<Nodo> nodi(N);
+    leggiNodi(stream, nodi, M, K);
+    
+    
+    //close `input.txt` file
+    stream.close();
     
 
-    //DEBUG
+    //DEBUG print the input graph
 
     cout << N << " aule;" << endl;
     cout << M << " corridoi semplici;" << endl;
@@ -58,30 +52,56 @@ int main()
     cout << I << " aula impostore;" << endl;
     cout << S << " aula studenti;" << endl;
     cout << F << " FabLab;" << endl;
-    cout << endl;  
-    cout << "Corridoi:" << endl;
-    for (size_t i = 0; i < corridoi.size(); i++)
-    {
-        printCorridoio(corridoi[i]);
-    }
+    cout << endl;
+    printNodi(nodi); 
 
     //END DEBUG
 
+    //TODO solution
 
-    //close `input.txt` file
-    stream.close();
-
+    //TODO output
 
     return 0;
 }
 
 
-void printCorridoio(Corridoio c)
-{
-    if(c.ventola){
-        cout << c.U << " --> " << c.V << ", costo = [" << c.Tmin << ", " << c.Tmax << "] " << endl;
+void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
+    //read corridoi semplici
+    for (size_t i = 0; i < M; i++)
+    {
+        int U, V, T;
+        stream >> U >> V >> T;
+        nodi[U].raggiungibili.push_back({V, T});
     }
-    else{
-        cout << c.U << " --> " << c.V << ", costo = " << c.Tmin << endl;
+
+    //read remaining corridoi con ventola
+    for (size_t i = 0; i < K; i++)
+    {
+        int U, V, Tmin, Tmax;
+        stream >> U >> V >> Tmin >> Tmax;
+        nodi[U].raggiungibili.push_back({V, Tmin, Tmax, true});
+    }
+}
+
+
+void printNodi(vector<Nodo> nodi)
+{
+    for (size_t i = 0; i < nodi.size(); i++)
+    {
+        cout << "Nodo " << i << " connesso a:" << endl;
+        if (nodi[i].raggiungibili.size() == 0)
+            cout << "\tnessun nodo" << endl;
+        else
+        for (size_t j = 0; j < nodi[i].raggiungibili.size(); j++)
+        {
+            if(nodi[i].raggiungibili[j].ventola)
+                cout << "\t" << nodi[i].raggiungibili[j].destinazione << " con costo [" << 
+                nodi[i].raggiungibili[j].Tmin << ", " << nodi[i].raggiungibili[j].Tmax << "];" << endl;
+            else
+                cout << "\t" << nodi[i].raggiungibili[j].destinazione << " con costo " << 
+                nodi[i].raggiungibili[j].Tmin << ";" << endl;
+                
+        }
+        cout << endl;
     }
 }
