@@ -37,15 +37,15 @@ int main()
     {
         int U, V, Tmin;
         stream >> U >> V >> Tmin;
-        corridoi.push_back(Corridoio{U, V, Tmin, -1, false});
+        corridoi[i] = Corridoio{U, V, Tmin, -1, false};
     }
 
     //read remaining corridoi con ventola
-    for (size_t i = 0; i < K; i++)
+    for (size_t i = M; i < K + M; i++)
     {
         int U, V, Tmin, Tmax;
         stream >> U >> V >> Tmin >> Tmax;
-        corridoi.push_back(Corridoio{U, V, Tmin, Tmax, true});
+        corridoi[i] = Corridoio{U, V, Tmin, Tmax, true};
     }
     
 
@@ -72,17 +72,19 @@ int main()
     stream.close();
 
 
-
     return 0;
 }
 
 
 void printCorridoio(Corridoio c)
 {
+    cout << c.U << " --> " << c.V << ", costo = [" << c.Tmin << ", " << c.Tmax << "], " << c.ventola << endl;
+    /*
     if(c.ventola){
         cout << c.U << " --> " << c.V << ", costo = [" << c.Tmin << ", " << c.Tmax << "] " << endl;
     }
     else{
         cout << c.U << " --> " << c.V << ", costo = " << c.Tmin << endl;
     }
+    */
 }
