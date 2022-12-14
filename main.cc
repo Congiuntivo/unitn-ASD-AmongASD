@@ -16,9 +16,20 @@ struct Nodo{
     int distanza = -1;
 };
 
+struct Risultato
+{
+    int vittoriaImpostore;
+    int distanzaMinimaImpostore;
+    int distanzaMinimaStudenti;
+    vector<int> potenzaVentole;     //potremmo avere un problema dato che vanno restituiti nell'ordine in cui sono stati trovati in input
+    //TODO add roba facoltativa quando la implementiamo
+};
+
+
 void printNodi(vector<Nodo> nodi);
 void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K);
-
+Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
+void stampaOutput(fstream &stream, Risultato &risultato);
 
 int main()
 {
@@ -57,13 +68,93 @@ int main()
 
     //END DEBUG
 
-    //TODO solution
 
-    //TODO output
+    //risoluzione problema
+
+    Risultato risultato = soluzione(nodi, I, S, F);
+
+    //output
+
+    stream.open("output.txt", ios::out);
+    stampaOutput(stream, risultato);
+    stream.close();
+
 
     return 0;
 }
 
+
+int costoMinimoCorridoio(vector<Corridoio> &corridoi, int destinazione){
+    for (size_t i = 0; i < corridoi.size(); i++)
+    {
+        if (corridoi[i].destinazione == destinazione)
+            return corridoi[i].Tmin;
+    }
+    return -1;
+}
+
+
+
+int distanzaMinimaPesataDa(vector<Nodo> &nodi, int start, int F){
+    /*  questa doveva essere l'implementazione dell'algoritmo di Dijkstra, ma è decisamnete troppo tardi
+    vector<int> distanze(nodi.size());
+    distanze[start] = -1;      //default value just to be sure
+    vector<int> predecessori(nodi.size());
+    //initialize predecessori, don't know if it's necessary
+    for (size_t i = 0; i < predecessori.size(); i++)
+    {
+        predecessori[i] = -1;
+    }
+    //Dijkstra initialization
+    for (size_t i = 0; i < nodi.size(); i++)
+    {
+        if (i == start)
+            continue;
+        else {
+            if (is_adiacente(nodi[start].raggiungibili, i))
+            {
+                distanze[i] = costoMinimoCorridoio(nodi[start].raggiungibili, i);
+                predecessori[i] = start;
+            }
+            else{
+                distanze[i] = -8            //stands for infinite lmao
+            }
+            
+        }
+    }
+    */
+
+    return -1;
+}
+
+
+bool is_adiacente(vector<Corridoio> &raggiungibili, int destinazione){
+    for (size_t i = 0; i < raggiungibili.size(); i++)
+    {
+        if (raggiungibili[i].destinazione == destinazione)
+            return true;
+    }
+    return false;
+}
+
+
+Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
+    Risultato risultato = {-1, -1, -1, {}};
+    //TODO everything
+
+    return risultato;
+}
+
+
+
+void stampaOutput(fstream &stream, Risultato &risultato){
+    stream << risultato.vittoriaImpostore << endl;
+    stream << risultato.distanzaMinimaImpostore << " " << risultato.distanzaMinimaStudenti << endl;
+    for (size_t i = 0; i < risultato.potenzaVentole.size(); i++) {
+        cout << risultato.potenzaVentole[i] << " ";
+    }
+    // TODO aggiungere la roba facoltativa qundo implementata
+}
 
 void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
     //read corridoi semplici
