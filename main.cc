@@ -12,6 +12,7 @@ struct Corridoio{
     bool ventola;
 };
 
+void printCorridoio(Corridoio c);
 
 int main()
 {
@@ -40,11 +41,11 @@ int main()
     }
 
     //read remaining corridoi con ventola
-    while(stream.eof())
+    for (size_t i = 0; i < K; i++)
     {
         int U, V, Tmin, Tmax;
         stream >> U >> V >> Tmin >> Tmax;
-        corridoi.push_back({U, V, Tmin, Tmax, true});
+        corridoi.push_back(Corridoio{U, V, Tmin, Tmax, true});
     }
     
 
@@ -58,7 +59,11 @@ int main()
     cout << S << " aula studenti;" << endl;
     cout << F << " FabLab;" << endl;
     cout << endl;  
-
+    cout << "Corridoi:" << endl;
+    for (size_t i = 0; i < corridoi.size(); i++)
+    {
+        printCorridoio(corridoi[i]);
+    }
 
     //END DEBUG
 
@@ -69,4 +74,15 @@ int main()
 
 
     return 0;
+}
+
+
+void printCorridoio(Corridoio c)
+{
+    if(c.ventola){
+        cout << c.U << " --> " << c.V << ", costo = [" << c.Tmin << ", " << c.Tmax << "] " << endl;
+    }
+    else{
+        cout << c.U << " --> " << c.V << ", costo = " << c.Tmin << endl;
+    }
 }
