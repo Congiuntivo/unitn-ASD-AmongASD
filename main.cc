@@ -4,7 +4,7 @@
 #include<queue>
 using namespace std;
 
-
+//Struttura che rappresenta un corridoio con o senza ventola
 struct Corridoio{
     int destinazione;
     int Tmin;
@@ -12,6 +12,7 @@ struct Corridoio{
     bool ventola = false;
 };
 
+//Struttura che rappresenta un nodo del grafo
 struct Nodo{
     vector<Corridoio> raggiungibili = {};
     int distanza = -1;
@@ -26,6 +27,7 @@ struct Nodo{
     */
 };
 
+//Struttura che contiene i dati da scrivere nel file di output
 struct Risultato
 {
     int vittoriaImpostore;
@@ -40,7 +42,7 @@ void printNodi(vector<Nodo> nodi);
 void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K);
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
 void stampaOutput(fstream &stream, Risultato &risultato);
-int bsf(vector<Nodo> &G, int n, int f);
+int bfs(vector<Nodo> &G, int n, int f);
 void inizializzaDistanze(vector<Nodo> &G);
 Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1, bool ventola = false);
 void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F);
@@ -127,7 +129,7 @@ bool is_adiacente(vector<Corridoio> &raggiungibili, int destinazione){
     return false;
 }
 
-
+//Funzione wrapper per la logica risolutiva
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     Risultato risultato = {-1, -1, -1, {}};
     
@@ -149,7 +151,7 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     return risultato;
 }
 
-
+//Debug - stampa il grafo e le variabili ricevute in input
 void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F){
     cout << N << " aule;" << endl;
     cout << M << " corridoi semplici;" << endl;
@@ -162,8 +164,7 @@ void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int 
     printNodi(nodi); 
 }
 
-
-
+//Dato lo stream, scrive nel file di output il contenuto di `risultato` come richiesto
 void stampaOutput(fstream &stream, Risultato &risultato){
     stream << risultato.vittoriaImpostore << endl;
     stream << risultato.distanzaMinimaImpostore << " " << risultato.distanzaMinimaStudenti << endl;
@@ -173,6 +174,7 @@ void stampaOutput(fstream &stream, Risultato &risultato){
     // TODO aggiungere la roba facoltativa qundo implementata
 }
 
+//Dato lo stream, legge il file di input e crea il grafo nel vettore di nodi
 void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
     //read corridoi semplici
     for (size_t i = 0; i < M; i++)
@@ -191,7 +193,7 @@ void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
     }
 }
 
-
+//Debug - stampa il grafo
 void printNodi(vector<Nodo> nodi)
 {
     for (size_t i = 0; i < nodi.size(); i++)
@@ -215,8 +217,7 @@ void printNodi(vector<Nodo> nodi)
 }
 
 
-// Aggiungere vettore hash precedenti, interi interessati (percorso impostore) vengono inseriti in uno stack e poi stampati prelevandone uno ad uno
-
+//TODO Aggiungere vettore hash precedenti, interi interessati (percorso impostore) vengono inseriti in uno stack e poi stampati prelevandone uno ad uno
 int bfs(vector<Nodo> &G, int n, int f){
 
     queue<int> Q;
@@ -233,9 +234,10 @@ int bfs(vector<Nodo> &G, int n, int f){
                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
                 Q.push(nodo);
             }
-            if(G[nodo].distanza == G[u].distanza + 1){
-                G[tmp].salti = G[u].num + 1;
-            }
+            // don't know what Daniele wanted to do here
+            // if(G[nodo].distanza == G[u].distanza + 1){
+            //     G[tmp].salti = G[u].salti + 1;
+            // }
         }
     }
     return G[f].distanza;
