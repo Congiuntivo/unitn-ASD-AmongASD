@@ -15,6 +15,14 @@ struct Corridoio{
 struct Nodo{
     vector<Corridoio> raggiungibili = {};
     int distanza = -1;
+    /*
+    TODO provare a fare così
+    -rimovere distanza
+
+    -aggiungere questo:
+    int distanza_studente = -1;
+    int distanza_impostore = -1;
+    */
 };
 
 struct Risultato
