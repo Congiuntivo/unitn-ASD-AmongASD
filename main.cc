@@ -15,6 +15,7 @@ struct Corridoio{
 struct Nodo{
     vector<Corridoio> raggiungibili = {};
     int distanza = -1;
+    int salti = 0;
     /*
     TODO provare a fare così
     -rimovere distanza
@@ -131,10 +132,10 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     Risultato risultato = {-1, -1, -1, {}};
     
     inizializzaDistanze(nodi);
-    risultato.distanzaMinimaImpostore = bsf(nodi, I, F);
+    risultato.distanzaMinimaImpostore = bfs(nodi, I, F);
     
     inizializzaDistanze(nodi);
-    risultato.distanzaMinimaStudenti = bsf(nodi, S, F);
+    risultato.distanzaMinimaStudenti = bfs(nodi, S, F);
 
     if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
         risultato.vittoriaImpostore = 0;
@@ -214,7 +215,9 @@ void printNodi(vector<Nodo> nodi)
 }
 
 
-int bsf(vector<Nodo> &G, int n, int f){
+// Aggiungere vettore hash precedenti, interi interessati (percorso impostore) vengono inseriti in uno stack e poi stampati prelevandone uno ad uno
+
+int bfs(vector<Nodo> &G, int n, int f){
 
     queue<int> Q;
     G[n].distanza = 0;
@@ -229,6 +232,9 @@ int bsf(vector<Nodo> &G, int n, int f){
             if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
                 Q.push(nodo);
+            }
+            if(G[nodo].distanza == G[u].distanza + 1){
+                G[tmp].salti = G[u].num + 1;
             }
         }
     }
