@@ -34,11 +34,24 @@ void stampaOutput(fstream &stream, Risultato &risultato);
 int bsf(vector<Nodo> &G, int n, int f);
 void inizializzaDistanze(vector<Nodo> &G);
 
-int main()
+int main(int argc, char *argv[])
 {
     //open `input.txt` file
+    
+    string inputFilename;
+    string outputFilename;
+
+
+    if(argc == 3){
+        inputFilename = argv[1];
+        outputFilename = argv[2];
+    }else{
+        inputFilename = "input.txt";
+        outputFilename = "output.txt";
+    }
+
     fstream stream;
-    stream.open("dataset/input/input1.txt", ios::in);
+    stream.open(inputFilename, ios::in);
 
     //read N, M, K
     int N, M, K;
@@ -78,7 +91,7 @@ int main()
 
     //output
 
-    stream.open("output.txt", ios::out);
+    stream.open(outputFilename, ios::out);
     stampaOutput(stream, risultato);
     stream.close();
 
@@ -157,6 +170,11 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
 
     if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
         risultato.vittoriaImpostore = 0;
+    }
+    else if(risultato.distanzaMinimaImpostore < risultato.distanzaMinimaStudenti){
+        risultato.vittoriaImpostore = 1;
+    }else{
+        risultato.vittoriaImpostore = 2;
     }
 
     printf("Soluzione : %d %d", risultato.distanzaMinimaImpostore, risultato.distanzaMinimaStudenti);
