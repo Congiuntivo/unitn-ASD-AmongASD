@@ -1,6 +1,7 @@
 #include<iostream>
 #include<fstream>
 #include<vector>
+#include<queue>
 using namespace std;
 
 
@@ -30,12 +31,14 @@ void printNodi(vector<Nodo> nodi);
 void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K);
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
 void stampaOutput(fstream &stream, Risultato &risultato);
+int bsf(vector<Nodo> &G, int n, int f);
+void inizializzaDistanze(vector<Nodo> &G);
 
 int main()
 {
     //open `input.txt` file
     fstream stream;
-    stream.open("input.txt", ios::in);
+    stream.open("/dataset_amongasd/amongasd/input/input1.txt", ios::in);
 
     //read N, M, K
     int N, M, K;
@@ -140,7 +143,23 @@ bool is_adiacente(vector<Corridoio> &raggiungibili, int destinazione){
 
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     Risultato risultato = {-1, -1, -1, {}};
-    //TODO everything
+    
+    inizializzaDistanze(nodi);
+
+    //printf("ok fin qui");
+    
+    risultato.distanzaMinimaImpostore = bsf(nodi, I, F);
+    
+
+    inizializzaDistanze(nodi);
+
+    risultato.distanzaMinimaStudenti = bsf(nodi, S, F);
+
+    if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
+        risultato.vittoriaImpostore = 0;
+    }
+
+    printf("Soluzione : %d %d", risultato.distanzaMinimaImpostore, risultato.distanzaMinimaStudenti);
 
     return risultato;
 }
@@ -194,5 +213,34 @@ void printNodi(vector<Nodo> nodi)
                 
         }
         cout << endl;
+    }
+}
+
+
+int bsf(vector<Nodo> &G, int n, int f){
+
+    queue<int> Q;
+    G[n].distanza = 0;
+    int u;
+    Q.push(n);
+    while(!Q.empty()){
+        u = Q.front();
+        Q.pop();
+        for(int i=0; i<G[u].raggiungibili.size(); i++){
+            Corridoio tmp = G[u].raggiungibili[i];
+            int nodo = tmp.destinazione;
+            cout << nodo << endl;
+            if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
+                G[nodo].distanza = G[u].distanza + tmp.Tmin;
+                Q.push(nodo);
+            }
+        }
+    }
+    return G[f].distanza;
+}
+
+void inizializzaDistanze(vector<Nodo> &G){
+    for (int i = 0; i < G.size(); i++){
+        G[i].distanza = -1;
     }
 }
