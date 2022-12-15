@@ -1,0 +1,4 @@
+for i in {1..10}
+do
+    ./main dataset/input/input$i.txt dataset/test_output/output$i.txt
+done
