@@ -6,3 +6,4 @@ main
 *.json
 .vscode
 *.exe
+dataset/test_output/*
