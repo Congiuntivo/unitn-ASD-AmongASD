@@ -13,7 +13,7 @@ struct Corridoio{
 };
 
 struct Nodo{
-    vector<Corridoio> raggiungibili;
+    vector<Corridoio> raggiungibili = {};
     int distanza = -1;
 };
 
@@ -33,6 +33,7 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
 void stampaOutput(fstream &stream, Risultato &risultato);
 int bsf(vector<Nodo> &G, int n, int f);
 void inizializzaDistanze(vector<Nodo> &G);
+Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1, bool ventola = false);
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
     string outputFilename;
 
 
-    if(argc == 3){
+    if(argc >= 3){
         inputFilename = argv[1];
         outputFilename = argv[2];
     }else{
@@ -109,39 +110,16 @@ int costoMinimoCorridoio(vector<Corridoio> &corridoi, int destinazione){
     return -1;
 }
 
-
-
-int distanzaMinimaPesataDa(vector<Nodo> &nodi, int start, int F){
-    /*  questa doveva essere l'implementazione dell'algoritmo di Dijkstra, ma è decisamnete troppo tardi
-    vector<int> distanze(nodi.size());
-    distanze[start] = -1;      //default value just to be sure
-    vector<int> predecessori(nodi.size());
-    //initialize predecessori, don't know if it's necessary
-    for (size_t i = 0; i < predecessori.size(); i++)
-    {
-        predecessori[i] = -1;
-    }
-    //Dijkstra initialization
-    for (size_t i = 0; i < nodi.size(); i++)
-    {
-        if (i == start)
-            continue;
-        else {
-            if (is_adiacente(nodi[start].raggiungibili, i))
-            {
-                distanze[i] = costoMinimoCorridoio(nodi[start].raggiungibili, i);
-                predecessori[i] = start;
-            }
-            else{
-                distanze[i] = -8            //stands for infinite lmao
-            }
-            
-        }
-    }
-    */
-
-    return -1;
+Corridoio newCorridoio(int destinazione, int Tmin, int Tmax, bool ventola){
+    Corridoio c;
+    c.destinazione = destinazione;
+    c.Tmin = Tmin;
+    c.Tmax = Tmax;
+    c.ventola = ventola;
+    return c;
 }
+
+
 
 
 bool is_adiacente(vector<Corridoio> &raggiungibili, int destinazione){
@@ -199,7 +177,7 @@ void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
     {
         int U, V, T;
         stream >> U >> V >> T;
-        nodi[U].raggiungibili.push_back({V, T});
+        nodi[U].raggiungibili.push_back(newCorridoio(V, T));
     }
 
     //read remaining corridoi con ventola
@@ -207,7 +185,7 @@ void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
     {
         int U, V, Tmin, Tmax;
         stream >> U >> V >> Tmin >> Tmax;
-        nodi[U].raggiungibili.push_back({V, Tmin, Tmax, true});
+        nodi[U].raggiungibili.push_back(newCorridoio(V, Tmin, Tmax, true));
     }
 }
 
