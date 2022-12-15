@@ -1,5 +1,6 @@
+g++ -std=c++11 main.cc
 [[ -d dataset/test_output ]] || mkdir dataset/test_output
-for i in {1..10}
+for i in {1..19}
 do
     ./main dataset/input/input$i.txt dataset/test_output/output$i.txt
 done
