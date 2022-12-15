@@ -34,15 +34,13 @@ void stampaOutput(fstream &stream, Risultato &risultato);
 int bsf(vector<Nodo> &G, int n, int f);
 void inizializzaDistanze(vector<Nodo> &G);
 Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1, bool ventola = false);
+void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F);
 
 int main(int argc, char *argv[])
-{
-    //open `input.txt` file
-    
+{    
+    //checks if i/o files are specified
     string inputFilename;
     string outputFilename;
-
-
     if(argc >= 3){
         inputFilename = argv[1];
         outputFilename = argv[2];
@@ -67,23 +65,12 @@ int main(int argc, char *argv[])
     leggiNodi(stream, nodi, M, K);
     
     
-    //close `input.txt` file
+    //close stream
     stream.close();
     
 
-    //DEBUG print the input graph
-
-    cout << N << " aule;" << endl;
-    cout << M << " corridoi semplici;" << endl;
-    cout << K << " corridoi con ventola;" << endl;
-    cout << endl;
-    cout << I << " aula impostore;" << endl;
-    cout << S << " aula studenti;" << endl;
-    cout << F << " FabLab;" << endl;
-    cout << endl;
-    printNodi(nodi); 
-
-    //END DEBUG
+    //prints input graph
+    inputGraphPrint(nodi, N, M, K, I, S, F);
 
 
     //risoluzione problema
@@ -136,14 +123,9 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     Risultato risultato = {-1, -1, -1, {}};
     
     inizializzaDistanze(nodi);
-
-    //printf("ok fin qui");
-    
     risultato.distanzaMinimaImpostore = bsf(nodi, I, F);
     
-
     inizializzaDistanze(nodi);
-
     risultato.distanzaMinimaStudenti = bsf(nodi, S, F);
 
     if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
@@ -155,9 +137,20 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
         risultato.vittoriaImpostore = 2;
     }
 
-    printf("Soluzione : %d %d", risultato.distanzaMinimaImpostore, risultato.distanzaMinimaStudenti);
-
     return risultato;
+}
+
+
+void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F){
+    cout << N << " aule;" << endl;
+    cout << M << " corridoi semplici;" << endl;
+    cout << K << " corridoi con ventola;" << endl;
+    cout << endl;
+    cout << I << " aula impostore;" << endl;
+    cout << S << " aula studenti;" << endl;
+    cout << F << " FabLab;" << endl;
+    cout << endl;
+    printNodi(nodi); 
 }
 
 
@@ -225,7 +218,6 @@ int bsf(vector<Nodo> &G, int n, int f){
         for(int i=0; i<G[u].raggiungibili.size(); i++){
             Corridoio tmp = G[u].raggiungibili[i];
             int nodo = tmp.destinazione;
-            cout << nodo << endl;
             if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
                 Q.push(nodo);
