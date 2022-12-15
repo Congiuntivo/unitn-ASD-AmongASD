@@ -1,0 +1,8 @@
+*.zip
+input.txt
+output.txt
+*.out
+main
+*.json
+.vscode
+*.exe

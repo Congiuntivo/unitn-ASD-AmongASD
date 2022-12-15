@@ -38,7 +38,7 @@ int main()
 {
     //open `input.txt` file
     fstream stream;
-    stream.open("/dataset_amongasd/amongasd/input/input1.txt", ios::in);
+    stream.open("dataset/input/input1.txt", ios::in);
 
     //read N, M, K
     int N, M, K;
