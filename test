@@ -1,4 +1,4 @@
-g++ -std=c++11 main.cc
+g++ -std=c++11 main.cc -o main
 [[ -d dataset/test_output ]] || mkdir dataset/test_output
 for i in {1..19}
 do
