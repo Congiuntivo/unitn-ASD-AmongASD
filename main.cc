@@ -197,7 +197,10 @@ void stampaOutput(fstream &stream, Risultato &risultato){
         stream << risultato.potenzaVentole[i] << " ";
     }
     stream << endl;
-    // TODO aggiungere la roba facoltativa qundo implementata
+    stream << risultato.camminoImpostore.size() << endl;
+    for (size_t i = 0; i < risultato.camminoImpostore.size(); i++) {
+        stream << risultato.camminoImpostore[i] << " ";
+    }
 }
 
 //Dato lo stream, legge il file di input e crea il grafo nel vettore di nodi
