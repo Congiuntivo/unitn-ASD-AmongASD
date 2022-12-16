@@ -2,6 +2,7 @@
 #include<fstream>
 #include<vector>
 #include<queue>
+#include<stack>
 using namespace std;
 
 //Struttura che rappresenta un corridoio con o senza ventola
@@ -34,7 +35,8 @@ struct Risultato
     int distanzaMinimaImpostore;
     int distanzaMinimaStudenti;
     vector<int> potenzaVentole;     //potremmo avere un problema dato che vanno restituiti nell'ordine in cui sono stati trovati in input
-    //TODO add roba facoltativa quando la implementiamo
+    vector<int> camminoImpostore;
+    vector<int> camminoStudenti;    //non fa parte dei dati di output ma penso sarà comodo averlo
 };
 
 
@@ -42,7 +44,7 @@ void printNodi(vector<Nodo> nodi);
 void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K);
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
 void stampaOutput(fstream &stream, Risultato &risultato);
-int bfs(vector<Nodo> &G, int n, int f);
+int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti);
 void inizializzaDistanze(vector<Nodo> &G);
 Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1, bool ventola = false);
 void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F);
@@ -81,7 +83,7 @@ int main(int argc, char *argv[])
     
 
     //prints input graph
-    inputGraphPrint(nodi, N, M, K, I, S, F);
+    // inputGraphPrint(nodi, N, M, K, I, S, F);
 
 
     //risoluzione problema
@@ -98,16 +100,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-
-int costoMinimoCorridoio(vector<Corridoio> &corridoi, int destinazione){
-    for (size_t i = 0; i < corridoi.size(); i++)
-    {
-        if (corridoi[i].destinazione == destinazione)
-            return corridoi[i].Tmin;
-    }
-    return -1;
-}
-
+//Costruttore `Corridoio` siccome C++ 11 puzza
 Corridoio newCorridoio(int destinazione, int Tmin, int Tmax, bool ventola){
     Corridoio c;
     c.destinazione = destinazione;
@@ -117,34 +110,66 @@ Corridoio newCorridoio(int destinazione, int Tmin, int Tmax, bool ventola){
     return c;
 }
 
-
-
-
-bool is_adiacente(vector<Corridoio> &raggiungibili, int destinazione){
-    for (size_t i = 0; i < raggiungibili.size(); i++)
-    {
-        if (raggiungibili[i].destinazione == destinazione)
-            return true;
+//Funzione che dato un vettore di precedenze restituisce il cammino (migliorabile)
+vector<int> calcolaCammino(vector<int> precedenti, int f){
+    stack<int> pila;
+    vector<int> cammino;
+    int nodo = f;
+    while(nodo != -1){
+        pila.push(nodo);
+        nodo = precedenti[nodo];
     }
-    return false;
+    while(!pila.empty()){
+        cammino.push_back(pila.top());
+        pila.pop();
+    }
+    return cammino;
 }
+
 
 //Funzione wrapper per la logica risolutiva
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
-    Risultato risultato = {-1, -1, -1, {}};
-    
-    inizializzaDistanze(nodi);
-    risultato.distanzaMinimaImpostore = bfs(nodi, I, F);
-    
-    inizializzaDistanze(nodi);
-    risultato.distanzaMinimaStudenti = bfs(nodi, S, F);
+    //inizializza risultato
+    Risultato risultato = {-1, -1, -1, {}, {}, {}};
+    risultato.camminoImpostore.resize(nodi.size());
+    risultato.camminoStudenti.resize(nodi.size());
+    for (int i = 0; i < nodi.size(); i++)
+    {
+        risultato.camminoImpostore[i] = -1;
+        risultato.camminoStudenti[i] = -1;
+    }
+    //dichiara e inizializza precedenti
+    vector<int> precedenti(nodi.size());
+    for (int i = 0; i < nodi.size(); i++)
+    {
+        precedenti[i] = -1;
+    }
 
+
+    // inizializzaDistanze(nodi);  inutile dato che è già stato fatto in `leggiNodi`
+    risultato.distanzaMinimaImpostore = bfs(nodi, I, F, precedenti);
+    risultato.camminoImpostore = calcolaCammino(precedenti, F);
+    
+    //re-inizializza precedenti
+    for (int i = 0; i < nodi.size(); i++)
+    {
+        precedenti[i] = -1;
+    }
+    inizializzaDistanze(nodi);
+    risultato.distanzaMinimaStudenti = bfs(nodi, S, F, precedenti);
+    risultato.camminoImpostore = calcolaCammino(precedenti, F);
+
+
+    //PAREGGIO
     if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
         risultato.vittoriaImpostore = 0;
     }
+    //VITTORIA IMPOSTORE
     else if(risultato.distanzaMinimaImpostore < risultato.distanzaMinimaStudenti){
         risultato.vittoriaImpostore = 1;
-    }else{
+    }
+    //VITTORIA STUDENTI
+    else{
         risultato.vittoriaImpostore = 2;
     }
 
@@ -169,8 +194,9 @@ void stampaOutput(fstream &stream, Risultato &risultato){
     stream << risultato.vittoriaImpostore << endl;
     stream << risultato.distanzaMinimaImpostore << " " << risultato.distanzaMinimaStudenti << endl;
     for (size_t i = 0; i < risultato.potenzaVentole.size(); i++) {
-        cout << risultato.potenzaVentole[i] << " ";
+        stream << risultato.potenzaVentole[i] << " ";
     }
+    stream << endl;
     // TODO aggiungere la roba facoltativa qundo implementata
 }
 
@@ -210,7 +236,6 @@ void printNodi(vector<Nodo> nodi)
             else
                 cout << "\t" << nodi[i].raggiungibili[j].destinazione << " con costo " << 
                 nodi[i].raggiungibili[j].Tmin << ";" << endl;
-                
         }
         cout << endl;
     }
@@ -218,8 +243,8 @@ void printNodi(vector<Nodo> nodi)
 
 
 //TODO Aggiungere vettore hash precedenti, interi interessati (percorso impostore) vengono inseriti in uno stack e poi stampati prelevandone uno ad uno
-int bfs(vector<Nodo> &G, int n, int f){
-
+int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti){
+    //TODO change to priority queue
     queue<int> Q;
     G[n].distanza = 0;
     int u;
@@ -227,17 +252,18 @@ int bfs(vector<Nodo> &G, int n, int f){
     while(!Q.empty()){
         u = Q.front();
         Q.pop();
+        //per tutti gli adiacenti di `u` setto la distanza
         for(int i=0; i<G[u].raggiungibili.size(); i++){
             Corridoio tmp = G[u].raggiungibili[i];
             int nodo = tmp.destinazione;
+            //se la distanza non è stata ancora calcolata oppure è maggiore di quella calcolata in questo percorso
             if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
+                //setto la nuova distanza
                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
+                //metto il nodo nella coda
                 Q.push(nodo);
+                precedenti[nodo] = u;
             }
-            // don't know what Daniele wanted to do here
-            // if(G[nodo].distanza == G[u].distanza + 1){
-            //     G[tmp].salti = G[u].salti + 1;
-            // }
         }
     }
     return G[f].distanza;
