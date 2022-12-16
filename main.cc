@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     
 
     //prints input graph
-    // inputGraphPrint(nodi, N, M, K, I, S, F);
+    inputGraphPrint(nodi, N, M, K, I, S, F);
 
 
     //risoluzione problema
@@ -127,7 +127,7 @@ vector<int> calcolaCammino(vector<int> precedenti, int f){
 }
 
 
-//Funzione wrapper per la logica risolutiva
+//Funzione wrapper per l'algoritmo risolutivo
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     //inizializza risultato
     Risultato risultato = {-1, -1, -1, {}, {}, {}};
@@ -157,7 +157,7 @@ Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
     }
     inizializzaDistanze(nodi);
     risultato.distanzaMinimaStudenti = bfs(nodi, S, F, precedenti);
-    risultato.camminoImpostore = calcolaCammino(precedenti, F);
+    risultato.camminoStudenti = calcolaCammino(precedenti, F);
 
 
     //PAREGGIO
