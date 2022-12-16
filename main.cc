@@ -3,6 +3,7 @@
 #include<vector>
 #include<queue>
 #include<stack>
+#include<unordered_set>
 using namespace std;
 
 //Struttura che rappresenta un corridoio con o senza ventola
@@ -11,7 +12,46 @@ struct Corridoio{
     int Tmin;
     int Tmax = -1;
     bool ventola = false;
+    int potenza = -1;
+    bool impostore = false;
+    
 };
+
+/*
+PSEUDO CODICE:
+
+SetVentoleMinimo()
+camminoStudentiPrecedente = {}
+camminoImpostorePrecedente = {}
+camminoStudenti = {}
+camminoImpostore = {}
+ImpostoreNonVince = chiVince(&camminoStudenti, &camminoImpostore)
+camminiCambiati = cambiatoCammino(&camminoStudenti, &camminoStudentiPrecedente) || cambiatoCammino(&camminoImpostore, &camminoImpostorePrecedente)
+while (ImpostoreNonVince && camminiCambiati):
+    impostaVentoleStudenteMax()             //imposta le ventole del cammino dello studente al massimo (ventole€)
+    camminoStudentiPrecedente = camminoStudenti
+    camminoImpostorePrecedente = camminoImpostore
+    camminoStudenti = {}
+    camminoImpostore = {}
+    ImpostoreNonVince
+ = chiVince(&camminoStudenti, &camminoImpostore)
+    camminiCambiati = cambiatoCammino(&camminoStudenti, &camminoStudentiPrecedente) || cambiatoCammino(&camminoImpostore, &camminoImpostorePrecedente)
+corridoio = getPrimoCorridoioConVentolaInComune()
+while (ImpostoreNonVince && corridoio != NULL):
+    //sono sicuro che se hanno un nodo in comune il cammino successivo sarà lo stesso e che, siccome l'impostore sta perdendo o pareggiando,
+    //lo studente sarà o in vantaggio o a pari distanza
+    nodoInComune = corridoio.partenza
+    //lo studente è in vantaggio, alzo la ventola al massimo, rendendo il percorso sconveniente anche per l'impostore, ma 
+    //spero che l'impostore abbia un percorso alternativo più conveniente
+    if (nodoInComune.distanzaStudente < nodoInComune.distanzaImpostore):
+        corridoio.impostaVentolaMax()    
+    //sono a pari distanza
+    else:
+        //TODO!!
+        //se alzo al massimo la ventola potrei perdere, nel caso in cui lo studente trovi un percorso alternativo più conveniente, perciò keep calm
+        //se lascio la ventola al minimo potrei non ottenere una potenziale vittoria
+        //qindi dovrei fare Dijkstra senza considerare quel corridoio per vedere quali sono le alternative
+*/
 
 //Struttura che rappresenta un nodo del grafo
 struct Nodo{
@@ -41,7 +81,7 @@ struct Risultato
 
 
 void printNodi(vector<Nodo> nodi);
-void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K);
+void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K, vector<Corridoio*> &corridoi);
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
 void stampaOutput(fstream &stream, Risultato &risultato);
 int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti);
@@ -73,9 +113,9 @@ int main(int argc, char *argv[])
     int I, S, F;
     stream >> I >> S >> F;
 
-
+    vector<Corridoio*> corridoi(M+K);
     vector<Nodo> nodi(N);
-    leggiNodi(stream, nodi, M, K);
+    leggiNodi(stream, nodi, M, K, corridoi);
     
     
     //close stream
@@ -107,11 +147,12 @@ Corridoio newCorridoio(int destinazione, int Tmin, int Tmax, bool ventola){
     c.Tmin = Tmin;
     c.Tmax = Tmax;
     c.ventola = ventola;
+    c.potenza = Tmin;
     return c;
 }
 
 //Funzione che dato un vettore di precedenze restituisce il cammino (migliorabile)
-vector<int> calcolaCammino(vector<int> precedenti, int f){
+vector<int> calcolaCammino(vector<int> &precedenti, int f){
     stack<int> pila;
     vector<int> cammino;
     int nodo = f;
@@ -126,35 +167,34 @@ vector<int> calcolaCammino(vector<int> precedenti, int f){
     return cammino;
 }
 
+//Dato un vettore, imposta tutti gli elementi a -1
+void setMenoUno(vector<int> &v){
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        v[i] = -1;
+    }
+}
+
 
 //Funzione wrapper per l'algoritmo risolutivo
 Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
-    //inizializza risultato
+    //inizializza risultato e precedenti
     Risultato risultato = {-1, -1, -1, {}, {}, {}};
     risultato.camminoImpostore.resize(nodi.size());
     risultato.camminoStudenti.resize(nodi.size());
+    vector<int> precedenti(nodi.size());
     for (int i = 0; i < nodi.size(); i++)
     {
         risultato.camminoImpostore[i] = -1;
         risultato.camminoStudenti[i] = -1;
-    }
-    //dichiara e inizializza precedenti
-    vector<int> precedenti(nodi.size());
-    for (int i = 0; i < nodi.size(); i++)
-    {
         precedenti[i] = -1;
     }
 
-
-    // inizializzaDistanze(nodi);  inutile dato che è già stato fatto in `leggiNodi`
     risultato.distanzaMinimaImpostore = bfs(nodi, I, F, precedenti);
     risultato.camminoImpostore = calcolaCammino(precedenti, F);
     
-    //re-inizializza precedenti
-    for (int i = 0; i < nodi.size(); i++)
-    {
-        precedenti[i] = -1;
-    }
+    //re-inizializza precedenti e distanze
+    setMenoUno(precedenti);
     inizializzaDistanze(nodi);
     risultato.distanzaMinimaStudenti = bfs(nodi, S, F, precedenti);
     risultato.camminoStudenti = calcolaCammino(precedenti, F);
@@ -204,13 +244,14 @@ void stampaOutput(fstream &stream, Risultato &risultato){
 }
 
 //Dato lo stream, legge il file di input e crea il grafo nel vettore di nodi
-void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
+void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K, vector<Corridoio*> &corridoi){
     //read corridoi semplici
     for (size_t i = 0; i < M; i++)
     {
         int U, V, T;
         stream >> U >> V >> T;
         nodi[U].raggiungibili.push_back(newCorridoio(V, T));
+        corridoi.push_back(&nodi[U].raggiungibili[nodi[U].raggiungibili.size()-1]);
     }
 
     //read remaining corridoi con ventola
@@ -219,6 +260,7 @@ void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K){
         int U, V, Tmin, Tmax;
         stream >> U >> V >> Tmin >> Tmax;
         nodi[U].raggiungibili.push_back(newCorridoio(V, Tmin, Tmax, true));
+        corridoi.push_back(&nodi[U].raggiungibili[nodi[U].raggiungibili.size()-1]);
     }
 }
 
@@ -245,7 +287,6 @@ void printNodi(vector<Nodo> nodi)
 }
 
 
-//TODO Aggiungere vettore hash precedenti, interi interessati (percorso impostore) vengono inseriti in uno stack e poi stampati prelevandone uno ad uno
 int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti){
     //TODO change to priority queue
     queue<int> Q;
@@ -265,12 +306,14 @@ int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti){
                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
                 //metto il nodo nella coda
                 Q.push(nodo);
+                //setto il predecessore
                 precedenti[nodo] = u;
             }
         }
     }
     return G[f].distanza;
 }
+
 
 void inizializzaDistanze(vector<Nodo> &G){
     for (int i = 0; i < G.size(); i++){
