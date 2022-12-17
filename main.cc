@@ -18,7 +18,7 @@ struct Corridoio
 // Struttura che rappresenta un nodo del grafo
 struct Nodo
 {
-    vector<Corridoio> adj = {};
+    vector<Corridoio*> adj = {};
     int distanzaS = -1;
     int distanzaI = -1;
     int predecessoreI = -1;
@@ -40,7 +40,7 @@ void leggiNodi(fstream &stream);
 Risultato soluzione();
 void stampaOutput(fstream &stream, Risultato &risultato);
 void inizializzaDistanze(vector<Nodo> &G);
-Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1);
+Corridoio* newCorridoio(int destinazione, int Tmin, int Tmax = -1);
 void inputGraphPrint();
 int dijkstraI();
 void setPassaImpostore();
@@ -102,14 +102,14 @@ int main(int argc, char *argv[])
 }
 
 // Costruttore `Corridoio` siccome C++ 11 puzza
-Corridoio newCorridoio(int destinazione, int Tmin, int Tmax)
+Corridoio* newCorridoio(int destinazione, int Tmin, int Tmax)
 {
-    Corridoio c;
-    c.destinazione = destinazione;
-    c.Tmin = Tmin;
-    c.Tmax = Tmax;
-    c.ventolaAccesa = false;
-    c.passaImpostore = false;
+    Corridoio* c = new Corridoio;
+    c->destinazione = destinazione;
+    c->Tmin = Tmin;
+    c->Tmax = Tmax;
+    c->ventolaAccesa = false;
+    c->passaImpostore = false;
     return c;
 }
 
@@ -273,10 +273,10 @@ Corridoio* getCorridoioPareggiante(){
     while(predecessore != -1){
         for (int i = 0; i < nodi[predecessore].adj.size(); i++)
         {
-            Corridoio tmp = nodi[predecessore].adj[i];
-            if(tmp.destinazione == current){
-                if(tmp.Tmax != -1 && !tmp.ventolaAccesa){
-                    return &nodi[predecessore].adj[i];
+            Corridoio* tmp = nodi[predecessore].adj[i];
+            if(tmp->destinazione == current){
+                if(tmp->Tmax != -1 && !tmp->ventolaAccesa){
+                    return nodi[predecessore].adj[i];
                 }
                 else{
                     break;
@@ -316,8 +316,8 @@ int dijkstraS()
         coda.pop();
         for (int i = 0; i < nodi[current].adj.size(); i++)
         {
-            Corridoio tmp = nodi[current].adj[i];
-            int destinazione = tmp.destinazione;
+            Corridoio* tmp = nodi[current].adj[i];
+            int destinazione = tmp->destinazione;
             // se non passa l'impostore ed è una ventola, la sparo al massimo
             //  if(!tmp.passaImpostore && tmp.Tmax != -1 && (nodi[current].distanzaS < nodi[current].distanzaI)){
             //      tmp.ventolaAccesa = true;
@@ -337,7 +337,7 @@ int dijkstraS()
             //         //CAZZI AMARI
             //     }
             // }
-            int costoCorridoio = tmp.ventolaAccesa ? tmp.Tmax : tmp.Tmin;
+            int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
             if (nodi[destinazione].distanzaS == -1 || nodi[destinazione].distanzaS > nodi[current].distanzaS + costoCorridoio)
             {
                 nodi[destinazione].distanzaS = nodi[current].distanzaS + costoCorridoio;
@@ -362,10 +362,10 @@ int dijkstraI()
         coda.pop();
         for (int i = 0; i < nodi[current].adj.size(); i++)
         {
-            Corridoio tmp = nodi[current].adj[i];
-            int destinazione = tmp.destinazione;
+            Corridoio* tmp = nodi[current].adj[i];
+            int destinazione = tmp->destinazione;
             // se la ventola è accesa, il costo è Tmax, altrimenti Tmin   ---- !!!controllare se è corretto!!!
-            int costoCorridoio = tmp.ventolaAccesa ? tmp.Tmax : tmp.Tmin;
+            int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
             if (nodi[destinazione].distanzaI == -1 || nodi[destinazione].distanzaI > (nodi[current].distanzaI + costoCorridoio))
             {
                 // setto la distanza
@@ -393,9 +393,9 @@ void setPassaImpostore()
     {
         for (int i = 0; i < nodi[predecessore].adj.size(); i++)
         {
-            if (nodi[predecessore].adj[i].destinazione == current)
+            if (nodi[predecessore].adj[i]->destinazione == current)
             {
-                nodi[predecessore].adj[i].passaImpostore = true;
+                nodi[predecessore].adj[i]->passaImpostore = true;
                 break;
             }
         }
@@ -413,20 +413,20 @@ bool setVentoleSoloStudenti()
     {
         for (int i = 0; i < nodi[predecessore].adj.size(); i++)
         {
-            Corridoio tmp = nodi[predecessore].adj[i];
+            Corridoio* tmp = nodi[predecessore].adj[i];
             // se è un corridoio attraversato da studenti, ha una ventola e non è accesa
-            if (tmp.destinazione == current && tmp.Tmax != -1 && !tmp.ventolaAccesa)
+            if (tmp->destinazione == current && tmp->Tmax != -1 && !tmp->ventolaAccesa)
             {
-                if (!tmp.passaImpostore)
+                if (!tmp->passaImpostore)
                 {
-                    nodi[predecessore].adj[i].ventolaAccesa = true;
+                    nodi[predecessore].adj[i]->ventolaAccesa = true;
                     cambiate = true;
                 }
                 else
                 {
                     if (nodi[predecessore].distanzaS < nodi[predecessore].distanzaI)
                     {
-                        nodi[predecessore].adj[i].ventolaAccesa = true;
+                        nodi[predecessore].adj[i]->ventolaAccesa = true;
                         cambiate = true;
                     }
                 }
@@ -485,7 +485,7 @@ void leggiNodi(fstream &stream)
         int U, V, T;
         stream >> U >> V >> T;
         nodi[U].adj.push_back(newCorridoio(V, T));
-        corridoi.push_back(&nodi[U].adj[nodi[U].adj.size() - 1]);
+        corridoi.push_back(nodi[U].adj[nodi[U].adj.size() - 1]);
     }
 
     // read remaining corridoi con ventola
@@ -494,7 +494,7 @@ void leggiNodi(fstream &stream)
         int U, V, Tmin, Tmax;
         stream >> U >> V >> Tmin >> Tmax;
         nodi[U].adj.push_back(newCorridoio(V, Tmin, Tmax));
-        corridoi.push_back(&nodi[U].adj[nodi[U].adj.size() - 1]);
+        corridoi.push_back(nodi[U].adj[nodi[U].adj.size() - 1]);
     }
 }
 
@@ -509,10 +509,10 @@ void printNodi(vector<Nodo> nodi)
         else
             for (size_t j = 0; j < nodi[i].adj.size(); j++)
             {
-                if (nodi[i].adj[j].Tmax != -1)
-                    cout << "\t" << nodi[i].adj[j].destinazione << " con costo [" << nodi[i].adj[j].Tmin << ", " << nodi[i].adj[j].Tmax << "];" << endl;
+                if (nodi[i].adj[j]->Tmax != -1)
+                    cout << "\t" << nodi[i].adj[j]->destinazione << " con costo [" << nodi[i].adj[j]->Tmin << ", " << nodi[i].adj[j]->Tmax << "];" << endl;
                 else
-                    cout << "\t" << nodi[i].adj[j].destinazione << " con costo " << nodi[i].adj[j].Tmin << ";" << endl;
+                    cout << "\t" << nodi[i].adj[j]->destinazione << " con costo " << nodi[i].adj[j]->Tmin << ";" << endl;
             }
         cout << endl;
     }
