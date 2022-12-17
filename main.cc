@@ -129,13 +129,6 @@ vector<int> calcolaCamminoImpostore(){
      return cammino;
  }
 
-// Dato un vettore, imposta tutti gli elementi a -1
-//  void setMenoUno(vector<int> &v){
-//      for (size_t i = 0; i < v.size(); i++)
-//      {
-//          v[i] = -1;
-//      }
-//  }
 
 // Funzione wrapper per l'algoritmo risolutivo
 Risultato soluzione()
@@ -216,48 +209,6 @@ Risultato soluzione()
 
     risultato.camminoImpostore = calcolaCamminoImpostore();
 
-
-    // setNodesMetadataMenoUno();
-    // risultato.distanzaMinimaImpostore = dijkstraI();
-    // setPassaImpostore();
-    // risultato.distanzaMinimaStudenti = dijkstraS();
-
-    // while(risultato.distanzaMinimaStudenti < 0){
-    //     switch (risultato.distanzaMinimaStudenti)
-    //     {
-    //     case -1:
-    //         setNodesMetadataMenoUno();
-    //         risultato.distanzaMinimaImpostore = dijkstraI();
-    //         setPassaImpostore();
-    //         risultato.distanzaMinimaStudenti = dijkstraS();
-    //         break;
-
-    //     default:
-    //         break;
-    //     }
-    // }
-
-    // risultato.camminoImpostore = calcolaCammino(precedenti, F);
-
-    // //re-inizializza precedenti e distanze
-    // setMenoUno(precedenti);
-    // inizializzaDistanze(nodi);
-    // risultato.distanzaMinimaStudenti = bfs(nodi, S, F, precedenti);
-    // risultato.camminoStudenti = calcolaCammino(precedenti, F);
-
-    // //PAREGGIO
-    // if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
-    //     risultato.vittoriaImpostore = 0;
-    // }
-    // //VITTORIA IMPOSTORE
-    // else if(risultato.distanzaMinimaImpostore < risultato.distanzaMinimaStudenti){
-    //     risultato.vittoriaImpostore = 1;
-    // }
-    // //VITTORIA STUDENTI
-    // else{
-    //     risultato.vittoriaImpostore = 2;
-    // }
-
     cout << risultato.vittoriaImpostore << endl;
     cout << risultato.distanzaMinimaImpostore << endl;
     cout << risultato.distanzaMinimaStudenti << endl;
@@ -318,25 +269,6 @@ int dijkstraS()
         {
             Corridoio* tmp = nodi[current].adj[i];
             int destinazione = tmp->destinazione;
-            // se non passa l'impostore ed è una ventola, la sparo al massimo
-            //  if(!tmp.passaImpostore && tmp.Tmax != -1 && (nodi[current].distanzaS < nodi[current].distanzaI)){
-            //      tmp.ventolaAccesa = true;
-            // }
-            // //altrimenti se passa l'impostore ed è una ventola:
-            // else if(tmp.passaImpostore && tmp.Tmax != -1 && !tmp.ventolaAccesa){
-            //     //se vince lo studente, la alzo al massimo e rifaccio dijkstraI
-            //     if (nodi[current].distanzaS < nodi[current].distanzaI){
-            //         tmp.ventolaAccesa = true;
-            //         //Ritorna -1 se vince lo studente
-            //         cout << "current : " << current << " destinazione : " << destinazione << endl;
-            //         cout << "DEBUG - Rifare DijkstraI - vinceva lo studente" << endl;
-            //         return -1;
-            //     }
-            //     //se pareggiano devo vedere
-            //     else if (nodi[current].distanzaS == nodi[current].distanzaI){
-            //         //CAZZI AMARI
-            //     }
-            // }
             int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
             if (nodi[destinazione].distanzaS == -1 || nodi[destinazione].distanzaS > nodi[current].distanzaS + costoCorridoio)
             {
@@ -517,36 +449,3 @@ void printNodi(vector<Nodo> nodi)
         cout << endl;
     }
 }
-
-// int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti){
-//     //TODO change to priority queue
-//     queue<int> Q;
-//     G[n].distanza = 0;
-//     int u;
-//     Q.push(n);
-//     while(!Q.empty()){
-//         u = Q.front();
-//         Q.pop();
-//         //per tutti gli adiacenti di `u` setto la distanza
-//         for(int i=0; i<G[u].adj.size(); i++){
-//             Corridoio tmp = G[u].adj[i];
-//             int nodo = tmp.destinazione;
-//             //se la distanza non è stata ancora calcolata oppure è maggiore di quella calcolata in questo percorso
-//             if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
-//                 //setto la nuova distanza
-//                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
-//                 //metto il nodo nella coda
-//                 Q.push(nodo);
-//                 //setto il predecessore
-//                 precedenti[nodo] = u;
-//             }
-//         }
-//     }
-//     return G[f].distanza;
-// }
-
-// void inizializzaDistanze(vector<Nodo> &G){
-//     for (int i = 0; i < G.size(); i++){
-//         G[i].distanza = -1;
-//     }
-// }
