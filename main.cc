@@ -3,69 +3,25 @@
 #include<vector>
 #include<queue>
 #include<stack>
-#include<unordered_set>
 using namespace std;
 
 //Struttura che rappresenta un corridoio con o senza ventola
 struct Corridoio{
     int destinazione;
     int Tmin;
-    int Tmax = -1;
-    bool ventola = false;
-    int potenza = -1;
-    bool impostore = false;
-    
+    int Tmax = -1;                      //per capire se è un corridoioio con ventola o no guardo Tmax
+    bool ventolaAccesa = false;         //non accendiamo la ventola ad un livello x € (Tmin, Tmax)
+    bool passaImpostore = false;        //serve per capire se fa parte del cammino dell'impostore
 };
 
-/*
-PSEUDO CODICE:
-
-SetVentoleMinimo()
-camminoStudentiPrecedente = {}
-camminoImpostorePrecedente = {}
-camminoStudenti = {}
-camminoImpostore = {}
-ImpostoreNonVince = chiVince(&camminoStudenti, &camminoImpostore)
-camminiCambiati = cambiatoCammino(&camminoStudenti, &camminoStudentiPrecedente) || cambiatoCammino(&camminoImpostore, &camminoImpostorePrecedente)
-while (ImpostoreNonVince && camminiCambiati):
-    impostaVentoleStudenteMax()             //imposta le ventole del cammino dello studente al massimo (ventole€)
-    camminoStudentiPrecedente = camminoStudenti
-    camminoImpostorePrecedente = camminoImpostore
-    camminoStudenti = {}
-    camminoImpostore = {}
-    ImpostoreNonVince
- = chiVince(&camminoStudenti, &camminoImpostore)
-    camminiCambiati = cambiatoCammino(&camminoStudenti, &camminoStudentiPrecedente) || cambiatoCammino(&camminoImpostore, &camminoImpostorePrecedente)
-corridoio = getPrimoCorridoioConVentolaInComune()
-while (ImpostoreNonVince && corridoio != NULL):
-    //sono sicuro che se hanno un nodo in comune il cammino successivo sarà lo stesso e che, siccome l'impostore sta perdendo o pareggiando,
-    //lo studente sarà o in vantaggio o a pari distanza
-    nodoInComune = corridoio.partenza
-    //lo studente è in vantaggio, alzo la ventola al massimo, rendendo il percorso sconveniente anche per l'impostore, ma 
-    //spero che l'impostore abbia un percorso alternativo più conveniente
-    if (nodoInComune.distanzaStudente < nodoInComune.distanzaImpostore):
-        corridoio.impostaVentolaMax()    
-    //sono a pari distanza
-    else:
-        //TODO!!
-        //se alzo al massimo la ventola potrei perdere, nel caso in cui lo studente trovi un percorso alternativo più conveniente, perciò keep calm
-        //se lascio la ventola al minimo potrei non ottenere una potenziale vittoria
-        //qindi dovrei fare Dijkstra senza considerare quel corridoio per vedere quali sono le alternative
-*/
 
 //Struttura che rappresenta un nodo del grafo
 struct Nodo{
-    vector<Corridoio> raggiungibili = {};
-    int distanza = -1;
-    int salti = 0;
-    /*
-    TODO provare a fare così
-    -rimovere distanza
-
-    -aggiungere questo:
-    int distanza_studente = -1;
-    int distanza_impostore = -1;
-    */
+    vector<Corridoio> adj = {};
+    int distanzaS = -1;
+    int distanzaI = -1;
+    int predecessoreI = -1;
+    int predecessoreS = -1;
 };
 
 //Struttura che contiene i dati da scrivere nel file di output
@@ -74,20 +30,29 @@ struct Risultato
     int vittoriaImpostore;
     int distanzaMinimaImpostore;
     int distanzaMinimaStudenti;
-    vector<int> potenzaVentole;     //potremmo avere un problema dato che vanno restituiti nell'ordine in cui sono stati trovati in input
     vector<int> camminoImpostore;
     vector<int> camminoStudenti;    //non fa parte dei dati di output ma penso sarà comodo averlo
 };
 
 
 void printNodi(vector<Nodo> nodi);
-void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K, vector<Corridoio*> &corridoi);
-Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F);
+void leggiNodi(fstream &stream);
+Risultato soluzione();
 void stampaOutput(fstream &stream, Risultato &risultato);
 int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti);
 void inizializzaDistanze(vector<Nodo> &G);
-Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1, bool ventola = false);
-void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F);
+Corridoio newCorridoio(int destinazione, int Tmin, int Tmax = -1);
+void inputGraphPrint();
+int dijkstraI();
+
+
+//Variabili globali:
+int N, M, K;
+int I, S, F;
+//corridoi mi serve per tenere traccia dei corridoi in oridne di input
+vector<Corridoio*> corridoi;
+vector<Nodo> nodi;
+
 
 int main(int argc, char *argv[])
 {    
@@ -104,18 +69,14 @@ int main(int argc, char *argv[])
 
     fstream stream;
     stream.open(inputFilename, ios::in);
-
     //read N, M, K
-    int N, M, K;
     stream >> N >> M >> K;
-
     //read I, S, F
-    int I, S, F;
     stream >> I >> S >> F;
 
-    vector<Corridoio*> corridoi(M+K);
-    vector<Nodo> nodi(N);
-    leggiNodi(stream, nodi, M, K, corridoi);
+    corridoi.resize(M+K);
+    nodi.resize(N);
+    leggiNodi(stream);
     
     
     //close stream
@@ -123,17 +84,17 @@ int main(int argc, char *argv[])
     
 
     //prints input graph
-    inputGraphPrint(nodi, N, M, K, I, S, F);
+    inputGraphPrint();
 
 
     //risoluzione problema
 
-    Risultato risultato = soluzione(nodi, I, S, F);
+    Risultato risultato = soluzione();
 
     //output
 
     stream.open(outputFilename, ios::out);
-    stampaOutput(stream, risultato);
+    // stampaOutput(stream, risultato);
     stream.close();
 
 
@@ -141,13 +102,13 @@ int main(int argc, char *argv[])
 }
 
 //Costruttore `Corridoio` siccome C++ 11 puzza
-Corridoio newCorridoio(int destinazione, int Tmin, int Tmax, bool ventola){
+Corridoio newCorridoio(int destinazione, int Tmin, int Tmax){
     Corridoio c;
     c.destinazione = destinazione;
     c.Tmin = Tmin;
     c.Tmax = Tmax;
-    c.ventola = ventola;
-    c.potenza = Tmin;
+    c.ventolaAccesa = false;
+    c.passaImpostore = false;
     return c;
 }
 
@@ -177,47 +138,70 @@ void setMenoUno(vector<int> &v){
 
 
 //Funzione wrapper per l'algoritmo risolutivo
-Risultato soluzione(vector<Nodo> &nodi, int I, int S, int F){
+Risultato soluzione(){
     //inizializza risultato e precedenti
-    Risultato risultato = {-1, -1, -1, {}, {}, {}};
-    risultato.camminoImpostore.resize(nodi.size());
-    risultato.camminoStudenti.resize(nodi.size());
-    vector<int> precedenti(nodi.size());
-    for (int i = 0; i < nodi.size(); i++)
-    {
-        risultato.camminoImpostore[i] = -1;
-        risultato.camminoStudenti[i] = -1;
-        precedenti[i] = -1;
-    }
+    Risultato risultato = {-1, -1, -1, {}, {}};
 
-    risultato.distanzaMinimaImpostore = bfs(nodi, I, F, precedenti);
-    risultato.camminoImpostore = calcolaCammino(precedenti, F);
+    risultato.distanzaMinimaImpostore = dijkstraI();
+    cout << "DEBUG - Dijkstra impostore: " << risultato.distanzaMinimaImpostore << endl;
+
+
+    // risultato.camminoImpostore = calcolaCammino(precedenti, F);
     
-    //re-inizializza precedenti e distanze
-    setMenoUno(precedenti);
-    inizializzaDistanze(nodi);
-    risultato.distanzaMinimaStudenti = bfs(nodi, S, F, precedenti);
-    risultato.camminoStudenti = calcolaCammino(precedenti, F);
+    // //re-inizializza precedenti e distanze
+    // setMenoUno(precedenti);
+    // inizializzaDistanze(nodi);
+    // risultato.distanzaMinimaStudenti = bfs(nodi, S, F, precedenti);
+    // risultato.camminoStudenti = calcolaCammino(precedenti, F);
 
 
-    //PAREGGIO
-    if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
-        risultato.vittoriaImpostore = 0;
-    }
-    //VITTORIA IMPOSTORE
-    else if(risultato.distanzaMinimaImpostore < risultato.distanzaMinimaStudenti){
-        risultato.vittoriaImpostore = 1;
-    }
-    //VITTORIA STUDENTI
-    else{
-        risultato.vittoriaImpostore = 2;
-    }
+    // //PAREGGIO
+    // if(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti){
+    //     risultato.vittoriaImpostore = 0;
+    // }
+    // //VITTORIA IMPOSTORE
+    // else if(risultato.distanzaMinimaImpostore < risultato.distanzaMinimaStudenti){
+    //     risultato.vittoriaImpostore = 1;
+    // }
+    // //VITTORIA STUDENTI
+    // else{
+    //     risultato.vittoriaImpostore = 2;
+    // }
 
-    return risultato;
+    // return risultato;
 }
 
+
+int dijkstraI(){
+    //TODO implement with priority queue
+    queue<int> coda;
+    nodi[I].distanzaI = 0;
+    int current;
+    coda.push(I);
+    while(!coda.empty()){
+        current = coda.front();
+        coda.pop();
+        for(int i=0; i<nodi[current].adj.size(); i++){
+            Corridoio tmp = nodi[current].adj[i];
+            int destinazione = tmp.destinazione;
+            //se la ventola è accesa, il costo è Tmax, altrimenti Tmin
+            int costoCorridoio = tmp.ventolaAccesa ? tmp.Tmax : tmp.Tmin;
+            if(nodi[destinazione].distanzaI == -1 || nodi[destinazione].distanzaI > (nodi[current].distanzaI + costoCorridoio)){
+                //setto la distanza
+                nodi[destinazione].distanzaI = nodi[current].distanzaI + costoCorridoio;
+                //aggiungo alla coda
+                coda.push(destinazione);
+                //setto il predecessore
+                nodi[destinazione].predecessoreI = current;
+            }
+        }
+    }
+    return nodi[F].distanzaI;
+}
+
+
 //Debug - stampa il grafo e le variabili ricevute in input
-void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int F){
+void inputGraphPrint(){
     cout << N << " aule;" << endl;
     cout << M << " corridoi semplici;" << endl;
     cout << K << " corridoi con ventola;" << endl;
@@ -233,8 +217,13 @@ void inputGraphPrint(vector<Nodo> &nodi, int N, int M, int K, int I, int S, int 
 void stampaOutput(fstream &stream, Risultato &risultato){
     stream << risultato.vittoriaImpostore << endl;
     stream << risultato.distanzaMinimaImpostore << " " << risultato.distanzaMinimaStudenti << endl;
-    for (size_t i = 0; i < risultato.potenzaVentole.size(); i++) {
-        stream << risultato.potenzaVentole[i] << " ";
+    for (size_t i = M; i < corridoi.size(); i++) {
+        if (corridoi[i]->ventolaAccesa) {
+            stream << corridoi[i]->Tmax << " ";
+        }
+        else {
+            stream << corridoi[i]->Tmin << " ";
+        }
     }
     stream << endl;
     stream << risultato.camminoImpostore.size() << endl;
@@ -244,14 +233,14 @@ void stampaOutput(fstream &stream, Risultato &risultato){
 }
 
 //Dato lo stream, legge il file di input e crea il grafo nel vettore di nodi
-void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K, vector<Corridoio*> &corridoi){
+void leggiNodi(fstream &stream){
     //read corridoi semplici
     for (size_t i = 0; i < M; i++)
     {
         int U, V, T;
         stream >> U >> V >> T;
-        nodi[U].raggiungibili.push_back(newCorridoio(V, T));
-        corridoi.push_back(&nodi[U].raggiungibili[nodi[U].raggiungibili.size()-1]);
+        nodi[U].adj.push_back(newCorridoio(V, T));
+        corridoi.push_back(&nodi[U].adj[nodi[U].adj.size()-1]);
     }
 
     //read remaining corridoi con ventola
@@ -259,8 +248,8 @@ void leggiNodi(fstream &stream, vector<Nodo> &nodi, int M, int K, vector<Corrido
     {
         int U, V, Tmin, Tmax;
         stream >> U >> V >> Tmin >> Tmax;
-        nodi[U].raggiungibili.push_back(newCorridoio(V, Tmin, Tmax, true));
-        corridoi.push_back(&nodi[U].raggiungibili[nodi[U].raggiungibili.size()-1]);
+        nodi[U].adj.push_back(newCorridoio(V, Tmin, Tmax));
+        corridoi.push_back(&nodi[U].adj[nodi[U].adj.size()-1]);
     }
 }
 
@@ -270,53 +259,53 @@ void printNodi(vector<Nodo> nodi)
     for (size_t i = 0; i < nodi.size(); i++)
     {
         cout << "Nodo " << i << " connesso a:" << endl;
-        if (nodi[i].raggiungibili.size() == 0)
+        if (nodi[i].adj.size() == 0)
             cout << "\tnessun nodo" << endl;
         else
-        for (size_t j = 0; j < nodi[i].raggiungibili.size(); j++)
+        for (size_t j = 0; j < nodi[i].adj.size(); j++)
         {
-            if(nodi[i].raggiungibili[j].ventola)
-                cout << "\t" << nodi[i].raggiungibili[j].destinazione << " con costo [" << 
-                nodi[i].raggiungibili[j].Tmin << ", " << nodi[i].raggiungibili[j].Tmax << "];" << endl;
+            if(nodi[i].adj[j].Tmax != -1)
+                cout << "\t" << nodi[i].adj[j].destinazione << " con costo [" << 
+                nodi[i].adj[j].Tmin << ", " << nodi[i].adj[j].Tmax << "];" << endl;
             else
-                cout << "\t" << nodi[i].raggiungibili[j].destinazione << " con costo " << 
-                nodi[i].raggiungibili[j].Tmin << ";" << endl;
+                cout << "\t" << nodi[i].adj[j].destinazione << " con costo " << 
+                nodi[i].adj[j].Tmin << ";" << endl;
         }
         cout << endl;
     }
 }
 
 
-int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti){
-    //TODO change to priority queue
-    queue<int> Q;
-    G[n].distanza = 0;
-    int u;
-    Q.push(n);
-    while(!Q.empty()){
-        u = Q.front();
-        Q.pop();
-        //per tutti gli adiacenti di `u` setto la distanza
-        for(int i=0; i<G[u].raggiungibili.size(); i++){
-            Corridoio tmp = G[u].raggiungibili[i];
-            int nodo = tmp.destinazione;
-            //se la distanza non è stata ancora calcolata oppure è maggiore di quella calcolata in questo percorso
-            if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
-                //setto la nuova distanza
-                G[nodo].distanza = G[u].distanza + tmp.Tmin;
-                //metto il nodo nella coda
-                Q.push(nodo);
-                //setto il predecessore
-                precedenti[nodo] = u;
-            }
-        }
-    }
-    return G[f].distanza;
-}
+// int bfs(vector<Nodo> &G, int n, int f, vector<int> &precedenti){
+//     //TODO change to priority queue
+//     queue<int> Q;
+//     G[n].distanza = 0;
+//     int u;
+//     Q.push(n);
+//     while(!Q.empty()){
+//         u = Q.front();
+//         Q.pop();
+//         //per tutti gli adiacenti di `u` setto la distanza
+//         for(int i=0; i<G[u].adj.size(); i++){
+//             Corridoio tmp = G[u].adj[i];
+//             int nodo = tmp.destinazione;
+//             //se la distanza non è stata ancora calcolata oppure è maggiore di quella calcolata in questo percorso
+//             if(G[nodo].distanza == -1 || G[nodo].distanza > (G[u].distanza + tmp.Tmin)){
+//                 //setto la nuova distanza
+//                 G[nodo].distanza = G[u].distanza + tmp.Tmin;
+//                 //metto il nodo nella coda
+//                 Q.push(nodo);
+//                 //setto il predecessore
+//                 precedenti[nodo] = u;
+//             }
+//         }
+//     }
+//     return G[f].distanza;
+// }
 
 
-void inizializzaDistanze(vector<Nodo> &G){
-    for (int i = 0; i < G.size(); i++){
-        G[i].distanza = -1;
-    }
-}
+// void inizializzaDistanze(vector<Nodo> &G){
+//     for (int i = 0; i < G.size(); i++){
+//         G[i].distanza = -1;
+//     }
+// }
