@@ -12,7 +12,6 @@ struct Corridoio
     int Tmin;
     int Tmax = -1;               // per capire se è un corridoioio con ventola o no guardo Tmax
     bool ventolaAccesa = false;  // non accendiamo la ventola ad un livello x € (Tmin, Tmax)
-    bool passaImpostore = false; // serve per capire se fa parte del cammino dell'impostore
 };
 
 // Struttura che rappresenta un nodo del grafo
@@ -42,10 +41,8 @@ void stampaOutput(fstream &stream, Risultato &risultato);
 Corridoio* newCorridoio(int destinazione, int Tmin, int Tmax = -1);
 void inputGraphPrint();
 int dijkstraI();
-void setPassaImpostore();
 int dijkstraS();
 void setNodesMetadataMenoUno();
-bool setVentoleSoloStudenti();
 Corridoio* getCorridoioPareggiante();
 
 // Variabili globali:
@@ -108,7 +105,6 @@ Corridoio* newCorridoio(int destinazione, int Tmin, int Tmax)
     c->Tmin = Tmin;
     c->Tmax = Tmax;
     c->ventolaAccesa = false;
-    c->passaImpostore = false;
     return c;
 }
 
@@ -161,6 +157,37 @@ void setVittoriaImpostore(Risultato &risultato){
 }
 
 
+int dijkstraSnormale()
+{
+    // TODO implement with priority queue
+    queue<int> coda;
+    nodi[S].distanzaS = 0;
+    int current;
+    coda.push(S);
+    while (!coda.empty())
+    {
+        current = coda.front();
+        coda.pop();
+        for (int i = 0; i < nodi[current].adj.size(); i++)
+        {
+            Corridoio* tmp = nodi[current].adj[i];
+            int destinazione = tmp->destinazione;
+            // se la ventola è accesa, il costo è Tmax, altrimenti Tmin   ---- !!!controllare se è corretto!!!
+            int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
+            if (nodi[destinazione].distanzaS == -1 || nodi[destinazione].distanzaS > (nodi[current].distanzaS + costoCorridoio))
+            {
+                // setto la distanza
+                nodi[destinazione].distanzaS = nodi[current].distanzaS + costoCorridoio;
+                // aggiungo alla coda
+                coda.push(destinazione);
+                // setto il predecessore
+                nodi[destinazione].predecessoreS = current;
+            }
+        }
+    }
+    return nodi[F].distanzaS;
+}
+
 // Funzione wrapper per l'algoritmo risolutivo
 Risultato soluzione()
 {
@@ -168,41 +195,20 @@ Risultato soluzione()
     Risultato risultato = {-1, -1, -1, {}, {}};
 
     risultato.distanzaMinimaImpostore = dijkstraI();
-    cout << "DEBUG - Dijkstra impostore 1: " << risultato.distanzaMinimaImpostore << endl;
-    // setPassaImpostore(); //19/12/2022 non penso serva
-    vector<int> camminoTmp = calcolaCamminoImpostore();
-    for(int i = 0; i < camminoTmp.size(); i++){
-        cout << camminoTmp[i] << " ";
-    }
-    cout << endl;
 
     
     risultato.distanzaMinimaStudenti = dijkstraS();
-    cout << "DEBUG - Dijkstra studente 1: " << risultato.distanzaMinimaStudenti << endl;
-    camminoTmp = calcolaCamminoStudente();
-    for(int i = 0; i < camminoTmp.size(); i++){
-        cout << camminoTmp[i] << " ";
-    }
-    cout << endl;
-
 
     for(int i = 0; i < nodi.size(); i++){
         nodi[i].predecessoreI = -1;
         nodi[i].distanzaI = -1;
     }
     risultato.distanzaMinimaImpostore = dijkstraI();
-    cout << "DEBUG - Dijkstra impostore 2: " << risultato.distanzaMinimaImpostore << endl;
-    camminoTmp = calcolaCamminoImpostore();
-    for(int i = 0; i < camminoTmp.size(); i++){
-        cout << camminoTmp[i] << " ";
-    }
-    cout << endl;
 
     setVittoriaImpostore(risultato);
 
     //handle sconfitta/pareggio con percorso comune
     while((risultato.vittoriaImpostore == 0 || risultato.vittoriaImpostore == 2) && nodi[F].predecessoreI == nodi[F].predecessoreS){
-        cout << "DEBUG - Enter handle percorso comune" << endl;
         Corridoio* tmp = getCorridoioPareggiante();
         if (tmp == NULL)
         {
@@ -213,27 +219,36 @@ Risultato soluzione()
         setNodesMetadataMenoUno();
         risultato.distanzaMinimaImpostore = dijkstraI();
         risultato.distanzaMinimaStudenti = dijkstraS();
+        for(int i = 0; i < nodi.size(); i++){
+        nodi[i].predecessoreI = -1;
+        nodi[i].distanzaI = -1;
+        }
+        risultato.distanzaMinimaImpostore = dijkstraI();
         if(risultato.distanzaMinimaStudenti < risultato.distanzaMinimaImpostore && risultato.vittoriaImpostore == 0){
             //ho già raggiunto il massimo che posso avere
             tmp->ventolaAccesa = false;
             setNodesMetadataMenoUno();
             risultato.distanzaMinimaImpostore = dijkstraI();
             risultato.distanzaMinimaStudenti = dijkstraS();
+            for(int i = 0; i < nodi.size(); i++){
+                nodi[i].predecessoreI = -1;
+                nodi[i].distanzaI = -1;
+            }
+            risultato.distanzaMinimaImpostore = dijkstraI();
             setVittoriaImpostore(risultato);
             break;     
         }
         setVittoriaImpostore(risultato);
     }
    
-
+    // setNodesMetadataMenoUno();
+    // int dI = dijkstraI();
+    // int dS = dijkstraSnormale();
+    // cout << "dI: " << dI << endl;
+    // cout << "dS: " << dS << endl;
     
-
+    vector<int> camminoS = calcolaCamminoStudente();
     risultato.camminoImpostore = calcolaCamminoImpostore();
-
-    cout << risultato.vittoriaImpostore << endl;
-    cout << risultato.distanzaMinimaImpostore << endl;
-    cout << risultato.distanzaMinimaStudenti << endl;
-
 
     return risultato;
 }
@@ -366,63 +381,6 @@ int dijkstraI()
     return nodi[F].distanzaI;
 }
 
-void setPassaImpostore()
-{
-    for (int i = 0; i < corridoi.size(); i++)
-    {
-        Corridoio *tmp = corridoi[i];
-        tmp->passaImpostore = false;
-    }
-    int current = F;
-    int predecessore = nodi[current].predecessoreI;
-    while (predecessore != -1)
-    {
-        for (int i = 0; i < nodi[predecessore].adj.size(); i++)
-        {
-            if (nodi[predecessore].adj[i]->destinazione == current)
-            {
-                nodi[predecessore].adj[i]->passaImpostore = true;
-                break;
-            }
-        }
-        current = predecessore;
-        predecessore = nodi[current].predecessoreI;
-    }
-}
-
-bool setVentoleSoloStudenti()
-{
-    bool cambiate = false;
-    int current = F;
-    int predecessore = nodi[current].predecessoreS;
-    while (predecessore != -1)
-    {
-        for (int i = 0; i < nodi[predecessore].adj.size(); i++)
-        {
-            Corridoio* tmp = nodi[predecessore].adj[i];
-            // se è un corridoio attraversato da studenti, ha una ventola e non è accesa
-            if (tmp->destinazione == current && tmp->Tmax != -1 && !tmp->ventolaAccesa)
-            {
-                if (!tmp->passaImpostore)
-                {
-                    nodi[predecessore].adj[i]->ventolaAccesa = true;
-                    cambiate = true;
-                }
-                else
-                {
-                    if (nodi[predecessore].distanzaS < nodi[predecessore].distanzaI)
-                    {
-                        nodi[predecessore].adj[i]->ventolaAccesa = true;
-                        cambiate = true;
-                    }
-                }
-            }
-        }
-        current = predecessore;
-        predecessore = nodi[current].predecessoreI;
-    }
-    return cambiate;
-}
 
 // Debug - stampa il grafo e le variabili ricevute in input
 void inputGraphPrint()
