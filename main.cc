@@ -145,6 +145,22 @@ vector<int> calcolaCamminoStudente(){
 }
 
 
+void setVittoriaImpostore(Risultato &risultato){
+    if (risultato.distanzaMinimaStudenti > risultato.distanzaMinimaImpostore)
+    {
+        risultato.vittoriaImpostore = 1;
+    }
+    else if (risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti)
+    {
+        risultato.vittoriaImpostore = 0;
+    }
+    else
+    {
+        risultato.vittoriaImpostore = 2;
+    }
+}
+
+
 // Funzione wrapper per l'algoritmo risolutivo
 Risultato soluzione()
 {
@@ -182,7 +198,11 @@ Risultato soluzione()
     }
     cout << endl;
 
-    while(risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti && nodi[F].predecessoreI == nodi[F].predecessoreS){
+    setVittoriaImpostore(risultato);
+
+    //handle sconfitta/pareggio con percorso comune
+    while((risultato.vittoriaImpostore == 0 || risultato.vittoriaImpostore == 2) && nodi[F].predecessoreI == nodi[F].predecessoreS){
+        cout << "DEBUG - Enter handle percorso comune" << endl;
         Corridoio* tmp = getCorridoioPareggiante();
         if (tmp == NULL)
         {
@@ -193,30 +213,19 @@ Risultato soluzione()
         setNodesMetadataMenoUno();
         risultato.distanzaMinimaImpostore = dijkstraI();
         risultato.distanzaMinimaStudenti = dijkstraS();
-        if(risultato.distanzaMinimaStudenti < risultato.distanzaMinimaImpostore){
+        if(risultato.distanzaMinimaStudenti < risultato.distanzaMinimaImpostore && risultato.vittoriaImpostore == 0){
             //ho già raggiunto il massimo che posso avere
             tmp->ventolaAccesa = false;
             setNodesMetadataMenoUno();
             risultato.distanzaMinimaImpostore = dijkstraI();
             risultato.distanzaMinimaStudenti = dijkstraS();
+            setVittoriaImpostore(risultato);
             break;     
         }
+        setVittoriaImpostore(risultato);
     }
    
 
-    
-    if (risultato.distanzaMinimaStudenti > risultato.distanzaMinimaImpostore)
-    {
-        risultato.vittoriaImpostore = 1;
-    }
-    else if (risultato.distanzaMinimaImpostore == risultato.distanzaMinimaStudenti)
-    {
-        risultato.vittoriaImpostore = 0;
-    }
-    else
-    {
-        risultato.vittoriaImpostore = 2;
-    }
     
 
     risultato.camminoImpostore = calcolaCamminoImpostore();
