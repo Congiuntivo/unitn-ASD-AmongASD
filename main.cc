@@ -39,7 +39,6 @@ void printNodi(vector<Nodo> nodi);
 void leggiNodi(fstream &stream);
 Risultato soluzione();
 void stampaOutput(fstream &stream, Risultato &risultato);
-void inizializzaDistanze(vector<Nodo> &G);
 Corridoio* newCorridoio(int destinazione, int Tmin, int Tmax = -1);
 void inputGraphPrint();
 int dijkstraI();
@@ -234,13 +233,14 @@ Risultato soluzione()
 Corridoio* getCorridoioPareggiante(){
     int current = F;
     int predecessore = nodi[current].predecessoreI;
+    Corridoio* toReturn = NULL;
     while(predecessore != -1){
         for (int i = 0; i < nodi[predecessore].adj.size(); i++)
         {
             Corridoio* tmp = nodi[predecessore].adj[i];
             if(tmp->destinazione == current){
                 if(tmp->Tmax != -1 && !tmp->ventolaAccesa){
-                    return nodi[predecessore].adj[i];
+                    toReturn = nodi[predecessore].adj[i];
                 }
                 else{
                     break;
@@ -249,11 +249,11 @@ Corridoio* getCorridoioPareggiante(){
         }
         current = predecessore;
         if(nodi[current].predecessoreI != nodi[current].predecessoreS){
-            return NULL;
+            return toReturn;
         }
         predecessore = nodi[current].predecessoreI;
     }
-    return NULL;
+    return toReturn;
 }
 
 
