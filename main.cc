@@ -157,36 +157,6 @@ void setVittoriaImpostore(Risultato &risultato){
 }
 
 
-int dijkstraSnormale()
-{
-    // TODO implement with priority queue
-    queue<int> coda;
-    nodi[S].distanzaS = 0;
-    int current;
-    coda.push(S);
-    while (!coda.empty())
-    {
-        current = coda.front();
-        coda.pop();
-        for (int i = 0; i < nodi[current].adj.size(); i++)
-        {
-            Corridoio* tmp = nodi[current].adj[i];
-            int destinazione = tmp->destinazione;
-            // se la ventola è accesa, il costo è Tmax, altrimenti Tmin   ---- !!!controllare se è corretto!!!
-            int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
-            if (nodi[destinazione].distanzaS == -1 || nodi[destinazione].distanzaS > (nodi[current].distanzaS + costoCorridoio))
-            {
-                // setto la distanza
-                nodi[destinazione].distanzaS = nodi[current].distanzaS + costoCorridoio;
-                // aggiungo alla coda
-                coda.push(destinazione);
-                // setto il predecessore
-                nodi[destinazione].predecessoreS = current;
-            }
-        }
-    }
-    return nodi[F].distanzaS;
-}
 
 // Funzione wrapper per l'algoritmo risolutivo
 Risultato soluzione()
@@ -241,13 +211,6 @@ Risultato soluzione()
         setVittoriaImpostore(risultato);
     }
    
-    // setNodesMetadataMenoUno();
-    // int dI = dijkstraI();
-    // int dS = dijkstraSnormale();
-    // cout << "dI: " << dI << endl;
-    // cout << "dS: " << dS << endl;
-    
-    vector<int> camminoS = calcolaCamminoStudente();
     risultato.camminoImpostore = calcolaCamminoImpostore();
 
     return risultato;
