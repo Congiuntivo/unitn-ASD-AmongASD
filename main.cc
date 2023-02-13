@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <utility>
 using namespace std;
 
 // Struttura che rappresenta un corridoio con o senza ventola
@@ -276,10 +277,10 @@ bool studenteInVantaggio(int distanzaStudente, int distanzaImpostore){
 
 int dijkstraS()
 {
-    queue<int> coda;
+    priority_queue<pair<int,int>, std::vector<pair<int,int>>, std::greater<pair<int,int>>> coda;
     nodi[S].distanzaS = 0;
-    int current;
-    coda.push(S);
+    int current, distanzaCurrent;
+    coda.emplace(0, S);
     for (int i = 0; i < nodi[S].adj.size(); i++)
     {
         Corridoio* tmp = nodi[S].adj[i];
@@ -287,7 +288,8 @@ int dijkstraS()
     }
     while (!coda.empty())
     {
-        current = coda.front();
+        current = coda.top().second;
+        distanzaCurrent = coda.top().first;
         coda.pop();
         for (int i = 0; i < nodi[current].adj.size(); i++)
         {
@@ -295,10 +297,10 @@ int dijkstraS()
             int destinazione = tmp->destinazione;
             int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
             bool vantaggioPrecedenteStudente = studenteInVantaggio(nodi[destinazione].distanzaS, nodi[destinazione].distanzaI);
-            if (nodi[destinazione].distanzaS == -1 || nodi[destinazione].distanzaS > nodi[current].distanzaS + costoCorridoio)
+            if (nodi[destinazione].distanzaS == -1 || nodi[destinazione].distanzaS > distanzaCurrent + costoCorridoio)
             {
                 nodi[destinazione].distanzaS = nodi[current].distanzaS + costoCorridoio;
-                coda.push(destinazione);
+                coda.emplace(nodi[destinazione].distanzaS, destinazione);
                 nodi[destinazione].predecessoreS = current;
                 if (studenteInVantaggio(nodi[destinazione].distanzaS, nodi[destinazione].distanzaI) && !vantaggioPrecedenteStudente)
                 {
@@ -316,26 +318,27 @@ int dijkstraS()
 int dijkstraI()
 {
     // TODO implement with priority queue
-    queue<int> coda;
+    priority_queue<pair<int,int>, std::vector<pair<int,int>>, std::greater<pair<int,int>>> coda;
     nodi[I].distanzaI = 0;
-    int current;
-    coda.push(I);
+    int current, distanzaCurrent;
+    coda.emplace(0, I);
     while (!coda.empty())
     {
-        current = coda.front();
+        current = coda.top().second;
+        distanzaCurrent = coda.top().first;
         coda.pop();
         for (int i = 0; i < nodi[current].adj.size(); i++)
         {
             Corridoio* tmp = nodi[current].adj[i];
             int destinazione = tmp->destinazione;
-            // se la ventola è accesa, il costo è Tmax, altrimenti Tmin   ---- !!!controllare se è corretto!!!
             int costoCorridoio = tmp->ventolaAccesa ? tmp->Tmax : tmp->Tmin;
-            if (nodi[destinazione].distanzaI == -1 || nodi[destinazione].distanzaI > (nodi[current].distanzaI + costoCorridoio))
+            if (nodi[destinazione].distanzaI == -1 || nodi[destinazione].distanzaI > (distanzaCurrent + costoCorridoio))
             {
                 // setto la distanza
                 nodi[destinazione].distanzaI = nodi[current].distanzaI + costoCorridoio;
+                distanzaCurrent = nodi[destinazione].distanzaI;
                 // aggiungo alla coda
-                coda.push(destinazione);
+                coda.emplace(nodi[destinazione].distanzaI, destinazione);
                 // setto il predecessore
                 nodi[destinazione].predecessoreI = current;
             }
